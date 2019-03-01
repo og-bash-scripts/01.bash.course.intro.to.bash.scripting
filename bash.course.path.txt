@@ -1,0 +1,175 @@
+########basics of shell scripting
+PATH=$PATH:/scripts/ 
+########
+#!/bin/bash 
+clear 
+echo
+
+#Continue after reading 6 chars 
+read -n 6 -p "Enter Project Code:" project_code
+
+echo 
+echo "Retrieving data for Project "$project_code 
+echo
+
+########
+declare -i intvar #declares variable is an integer 
+intvar = 123 #whole numbers only
+########
+declare -r rovar="Hello, world!" #readonly variable
+########
+unset rovar #clear variable value
+########
+vi .bashrc #add variable on linux startup
+########
+echo $[fakevar="this is alt text"] #checks to see if fakevar variable is used w/ []
+########
+echo $[#PATH] #list number of characters in value
+########
+$[rovar#*i] #delete all the characters in the value until and including i
+########
+# ! / bin/ bash 
+if test "$1" 
+	then 
+		echo "You must supply a username."
+		exit
+fi		
+if test "$2" 
+	then
+		echo "You must supply a file system starting point."
+		exit
+fi 
+
+clear
+echo
+echo "Please wait, seeking files owned by " $1
+echo
+find $2 -user $1
+########
+./args.sh user1 home #usage of script above
+########
+sort < cities.txt # feed sort program contents of cities.txt to sort
+sort < cities.txt > sorted_cities.txt
+########
+grep -i "t" < cities.txt #find words with t from file
+########
+find /datafiles/ -size +8000c #find files in folder greater than 8000 characters
+########
+find / -user user1 2> /dev/null #find files for user1 with "2" flag to mark errors and send to devnull to not display
+########
+find /home -user user1 | tee /user1_files.txt #stdout and wr to file.
+########
+cat /dev/random > /dev/null& #"&" runs cmd in bg
+########
+tar -czf backup.gz /bin -R >/backup/errorlog.txt 2>&1
+########
+kill %1 #kill job 1
+########
+disown -h %1 #disown script from current shell session
+########variables and fucntions
+$# #number of parameters passed to the script
+########
+#!bin/bash
+clear
+echo
+read -p "Enter city name:" cityname #user input stored as variable
+echo "Computer: " $HOSTNAME >> $HOSTNAME"_stats.txt"
+echo "City: " $cityname
+echo "Linux kernel info:" uname -a >> $HOSTNAME"_stats.txt"
+echo "Shell version:" $BASH_VERSION >> $HOSTNAME"_stats.txt"
+clear
+echo
+echo $HOSTNAME"_stats.txt file written successfully."
+echo
+########./call_export_var.sh
+servername="prod1"
+export servername #export variable to script to child script listed below
+./export server
+########./export_var.sh
+clear
+echo
+echo "The server name is "$servername
+echo
+########scope.sh
+func1()
+{
+	#declare sets the variable scope to local within this function
+	#declare costcenter="Toronto"
+	costcenter="Toronto"
+	echo "This is func1, the cost center is" $costcenter
+}
+
+func2()
+{
+	func1
+	echo $costcenter
+}
+func2
+########
+. ./scope.sh #dot sorces makes variable in script available to all i.e. echo $costcenter on cli
+########
+date +'%Y-%m-%d'
+datevar=`date +'%Y-%m-%d'` #backtick displays cmd out as variable value
+########print string
+printf "%s\n" $costcenter 
+printf "%.3s\n" $costcenter # prints first 3 of variable value
+########print numbers floating
+printf "%f\n" %numvar
+printf "%d\n" %numvar
+########func_lib1.sh
+function userinfo()
+{
+	echo "Current username:" $USER
+	echo "User home directory path: "$HOME
+}
+
+function ipinfo()
+{
+	IP_VAR=`ifconfig eth0 | grep "inet addr" | tr -s " " ":" | \
+	cut -f4 -d ":"`
+	
+	DGW_VAR=`ip route show | grep "default" | tr -s " " ":" | \
+	cut -f3 -d ":"`
+	echo "IP ADDRESS:" $IP_VAR
+	echo "DEFAULT GATEWAY:" $DGW_VAR
+	cat /etc/resolv.conf | grep "nameserver" | grep -v "#" #cut out comments from output
+}
+clear
+userinfo
+ipinfo
+########
+. ./func_lib1.sh #make functions avaialbe to cli
+########
+function get_salestax ()
+{
+	if test "$1" = ""
+	then
+		echo "You must supply a full expense amount."
+		return
+	else
+		echo "Full explense amount:" $1
+		nontax_amount=`echo "$1/1.4712" | bc`
+		tax_amount=`echo "$1-$nontax_amount" | bc`
+		echo "Non tax amount:" $nontax_amount
+		echo "Tax amount:" $tax_amount
+		
+		#Running echo $? after the script returns the tax amount
+		return $tax_amount
+	fi
+	echo "Operation completed successfully"
+}
+########
+func_args.sh 50 #pass 50 as $1 arg in prior function
+. ./func_args.sh
+get_salestax 50
+echo $?
+########call.sh #parent: export could be used too.
+. ./func.sh
+user_input 
+echo "The cost center is: "$costcenter
+########func.sh #child
+function user_input()
+{
+	read -p "Please enter cost center:" costcenter
+}
+
